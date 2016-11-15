@@ -1,9 +1,14 @@
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.net.ServerSocket;
+import java.net.Socket;
 
 public class ChristianTimeSim {
 
 	public static void main(String[] args) {
 		ClockThread ct = new ClockThread(Thread.currentThread());
-		String serverLoc;
+		String serverLoc = "";
 		
 		if(args.length == 0) {
 			System.out.println("You must have an argument for client/server");
@@ -72,12 +77,46 @@ public class ChristianTimeSim {
 		}
 		ct.start();
 		if(ct.isServer) {
-			//loop for replying to queries 
+			//loop for replying to queries
+			try {
+				ServerSocket ss = new ServerSocket(1000);
+				Socket cs = ss.accept();
+				DataInputStream dis = new DataInputStream(cs.getInputStream());
+				DataOutputStream dos = new DataOutputStream(cs.getOutputStream());
+				while(true) {
+					int ran = (int) (Math.random()*20);
+					dos.writeInt(ran);
+					int returned = dis.readInt();
+					System.out.println("Sent: " + ran + " Ret (sent + 1): " + returned);
+				}
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		 
 		}
 		else {
 			//loop for querying server
+			try {
+				Socket cs = new Socket(serverLoc, 1000);
+				DataInputStream dis = new DataInputStream(cs.getInputStream());
+				DataOutputStream dos = new DataOutputStream(cs.getOutputStream());
+				while(true) {
+					int received = dis.readInt();
+					System.out.println("Rec: " + received);
+					dos.writeInt(received + 1);
+				}
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
-		
+//		try {
+//			ct.t.join();
+//		} catch (InterruptedException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
 	}
 
 }

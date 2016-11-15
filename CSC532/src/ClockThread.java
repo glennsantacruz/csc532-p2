@@ -41,7 +41,10 @@ public class ClockThread implements Runnable{
 					isRunning = false;
 					return;
 				}
-			if(currTick == initTick + 10) {
+			//Testing if the thread is still alive is probably not necessary
+			//Added just in case
+			if(currTick == initTick + 10 || !hostThread.isAlive()) {
+				System.out.println("Main method thread is not alive, exiting");
 				return;
 			}
 		}

@@ -108,7 +108,6 @@ public class Client {
 		} else if( rate > 1 ) {
 			if( tickVariance > 0 ) {			
 				// server faster, but ahead: large speedup ( adj << 1 )
-				System.out.println("Yes it's hitting here");
 				adj = (1/rate) * 0.5;
 			} else if( tickVariance < 0 ) {		
 				// server faster, but behind: slight slowdown (adj > 1)
@@ -120,7 +119,7 @@ public class Client {
 		} else if( rate < 1 ) {
 			if( tickVariance > 0 ) {			
 				// server slower, but ahead: slight speedup (adj < 1)
-				adj = 0.99 + (this.OBSERVE_DELAY/(rate * cliDelayMS));
+				adj = (0.99 + (this.OBSERVE_DELAY/(rate * cliDelayMS))) * 0.5;
 			} else if( tickVariance < 0 ) {		
 				// server slower, but behind: slight slowdown (adj > 1)
 				//adj = 1.01 + (double)Math.abs(tickVariance)/(.5*this.OBSERVE_DELAY * cliDelayMS);

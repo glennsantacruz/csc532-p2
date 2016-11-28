@@ -85,6 +85,7 @@ public class Server {
 					int tick = this.clock.getTick();
 					outStream.writeInt( tick );
 					System.out.println( "server sent client response: " + tick  );
+//					CristianTimeSim.LOGGER.info("tickreply " + tick );
 				}
 			} catch (Throwable ignored) {
 			}

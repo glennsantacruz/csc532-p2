@@ -57,6 +57,7 @@ class Clock implements Runnable {
 			}
 			// we have slept long enough; add our tick
 			addTick(this.tickGranule);
+			CristianTimeSim.LOGGER.info("tick " + tick + ", ms " + msDelay);
 		}
 	}
 }

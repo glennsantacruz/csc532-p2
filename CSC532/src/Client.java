@@ -23,14 +23,17 @@ public class Client {
 		boolean isRunning = true;
 		int currTick = 0, lastTick = 0;
 		while (isRunning) {
+			System.out.println( "client sync - yield"  );
 			// first we behave nice with others
 			Thread.yield();
 
 			// sync on the clock instance, so that we can wait for a tick
 			synchronized (this.clock) {
 				try {
+					System.out.println( "client sync waiting on clock"  );
 					this.clock.wait();
 					currTick = this.clock.getTick();
+					System.out.println( "client sync got tick " + currTick  );
 				} catch (InterruptedException ignored) {
 				}
 			}
@@ -44,6 +47,7 @@ public class Client {
 	protected void observeServer() {
 		Socket cs = null;
 		try {
+			System.out.println( "client requesting from server"  );
 			// setup socket to talk with server
 			cs = new Socket(this.serverLocation, Server.SERVERPORT);
 			DataInputStream dis = new DataInputStream(cs.getInputStream());
@@ -55,6 +59,7 @@ public class Client {
 			int srvTick = dis.readInt();
 			int tickEnd = this.clock.getTick();
 
+			System.out.println( "server response received"  );
 			// record observation and adjust as needed
 			observeAdjust(srvTick, tickBegin, tickEnd);
 		} catch (Throwable t) {
@@ -143,6 +148,7 @@ public class Client {
 		}
 		// now we adjust our own clock's msDelay, according to the above
 		// observation:
+		System.out.println( "client obs: targetMS " + targetMS + ", srvTick " + srvTick + ", clientTick " + tickEnd  );
 		this.clock.setDelayMillis(targetMS);
 
 		// store the last observed values, for use in the next observation

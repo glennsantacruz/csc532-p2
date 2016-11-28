@@ -8,7 +8,7 @@ import java.util.Objects;
 public class Server {
 	public final static int SERVERPORT = 16532; // Fall 16, CSC 532
 	// protocol message for request
-	public final static String REQUESTTICK = "reqServerTick"; 
+	public final static String REQUESTTICK = "reqServerTick";
 
 	protected Clock clock = null;
 	protected Thread clockThread = null;
@@ -26,10 +26,14 @@ public class Server {
 		// Open a new socket, listening for client connections
 		try {
 			servSock = new ServerSocket(Server.SERVERPORT);
+			System.out.println( "server listening..." );
+
 			while (isListening) {
 				Socket clientSock = servSock.accept();
 				// Send the request to a thread to handle, and go back to
 				// listening immediately
+				System.out.println( "server accepted client" );
+
 				new ClientRequest(clientSock, this.clock);
 			}
 		} catch (IOException ie) {
@@ -52,6 +56,8 @@ public class Server {
 		Clock clock;
 
 		ClientRequest(Socket clientSocket, Clock serverClock) {
+			System.out.println( "ClientRequest constructor:");
+
 			try {
 				this.inStream = new DataInputStream(clientSocket.getInputStream());
 				this.outStream = new DataOutputStream(clientSocket.getOutputStream());
@@ -67,11 +73,18 @@ public class Server {
 
 		public void run() {
 			try {
+				System.out.println( "server reading client request"  );
+
 				String request = inStream.readUTF();
+				
+				System.out.println( "server read client request:" + request  );
+
 				if (Objects.equals(Server.REQUESTTICK, request)) {
 					// client is requesting our time; return it as quickly as
 					// possible
-					outStream.writeInt(this.clock.getTick());
+					int tick = this.clock.getTick();
+					outStream.writeInt( tick );
+					System.out.println( "server sent client response: " + tick  );
 				}
 			} catch (Throwable ignored) {
 			}

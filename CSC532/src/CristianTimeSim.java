@@ -1,18 +1,24 @@
+import java.util.logging.*;
 
 public class CristianTimeSim {
+	private static final Logger LOGGER = Logger.getLogger( CristianTimeSim.class.getName() );
+	
 	public static void main(String[] args) {
+
 		boolean isServer = false;
 		int ticks = 0;
 		int msDelay = 0;
 		String serverLoc = "";
 
+		System.out.println( "arguments:" + args.length );
+		
 		if (args.length == 0) {
 			System.out.println("You must have an argument for client/server");
 			return;
 		}
 
 		if (args[0].equals("server")) {
-			if (args.length < 3) {
+			if (args.length != 3) {
 				System.out.println("You must have 3 argument for server");
 				return;
 			}
@@ -35,7 +41,7 @@ public class CristianTimeSim {
 				return;
 			}
 		} else if (args[0].equals("client")) {
-			if (args.length > 4) {
+			if (args.length != 4) {
 				System.out.println("You must have 3 argument for client");
 				return;
 			}

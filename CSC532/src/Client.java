@@ -9,7 +9,6 @@ public class Client {
 	protected Thread clockThread = null;
 	protected String serverLocation = null;
 	protected int lastServerTick = 0, lastClientTick = 0, lastNetDelay = 0;
-
 	
 	public Client(String serverLoc, int tick, int msDelay) {
 		this.clock = new Clock(tick, msDelay);
@@ -26,14 +25,12 @@ public class Client {
 		boolean isRunning = true;
 		int currTick = 0, lastTick = 0;
 		while (isRunning) {
-
 			// first we behave nice with others
 			Thread.yield();
 
 			// sync on the clock instance, so that we can wait for a tick
 			synchronized (this.clock) {
 				try {
-
 					this.clock.wait();
 					currTick = this.clock.getTick();
 					System.out.println( "client sync tick " + currTick  );
@@ -80,19 +77,6 @@ public class Client {
 		// as seen from our own clock perspective. the delay is halved, to
 		// approximate the time involved in a single leg of the message request
 		int netDelay = (tickEnd - tickBegin) / 2;
-
-
-
-
-
-
-
-
-
-
-
-
-
 		
 		// note that the current netDelay is added to the current server tick, as a correction
 		// likewise, the prior netDelay is added to the prior server tick, as a correction
@@ -103,50 +87,6 @@ public class Client {
 
 		// calculate a variance in ticks between server and client
 		int tickVariance = (srvTick - tickEnd);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 		// our current delay
 		int cliDelayMS = this.clock.getDelayMillis();
@@ -159,11 +99,6 @@ public class Client {
 				// server same rate, but ahead: slight speedup ( adj < 1 )
 				adj = 0.99 - (tickVariance/(2*this.OBSERVE_DELAY * cliDelayMS));
 			} else if( tickVariance < 0 ) {		
-
-
-
-
-
 				// server same rate, but behind: slight slowdown (adj > 1)
 				adj = 1.01 + (Math.abs(tickVariance)/(this.OBSERVE_DELAY * cliDelayMS));
 			} else {							
@@ -210,7 +145,6 @@ public class Client {
 		// store the last observed values, for use in the next observation
 		this.lastServerTick = srvTick;
 		this.lastClientTick = tickEnd;
-
 		this.lastNetDelay = netDelay;
 	}
 }

@@ -26,13 +26,13 @@ public class Server {
 		// Open a new socket, listening for client connections
 		try {
 			servSock = new ServerSocket(Server.SERVERPORT);
-			System.out.println( "server listening..." );
+			System.out.println("server listening...");
 
 			while (isListening) {
 				Socket clientSock = servSock.accept();
 				// Send the request to a thread to handle, and go back to
 				// listening immediately
-				System.out.println( "server accepted client" );
+				System.out.println("server accepted client");
 
 				new ClientRequest(clientSock, this.clock);
 			}
@@ -56,7 +56,7 @@ public class Server {
 		Clock clock;
 
 		ClientRequest(Socket clientSocket, Clock serverClock) {
-			System.out.println( "ClientRequest constructor:");
+			System.out.println("ClientRequest constructor:");
 
 			try {
 				this.inStream = new DataInputStream(clientSocket.getInputStream());
@@ -74,13 +74,13 @@ public class Server {
 		public void run() {
 			try {
 				String request = inStream.readUTF();
-				
+
 				if (Objects.equals(Server.REQUESTTICK, request)) {
 					// client is requesting our time; return it as quickly as
 					// possible
 					int tick = this.clock.getTick();
-					outStream.writeInt( tick );
-					System.out.println( "server sent client response: " + tick  );
+					outStream.writeInt(tick);
+					System.out.println("server sent client : " + tick);
 				}
 			} catch (Throwable ignored) {
 			}

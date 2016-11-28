@@ -86,11 +86,12 @@ public class CristianTimeSim {
 		// at this point, we have enough information to run either mode:
 		if (isServer) {
 			try {
-				fh = new FileHandler("Server.log");
+				fh = new FileHandler("Server.csv");
 				CristianTimeSim.LOGGER.addHandler(fh);
 				SimpleFormatter sf = new SimpleFormatter();
 				fh.setFormatter(sf);
 				CristianTimeSim.LOGGER.setUseParentHandlers(false);
+				LOGGER.info("Millisecond, Tick, Delay");
 			} catch (SecurityException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -102,11 +103,12 @@ public class CristianTimeSim {
 			srv.listen();
 		} else {
 			try {
-				fh = new FileHandler("Client.log");
+				fh = new FileHandler("Client.csv");
 				CristianTimeSim.LOGGER.addHandler(fh);
 				SimpleFormatter sf = new SimpleFormatter();
 				fh.setFormatter(sf);
 				CristianTimeSim.LOGGER.setUseParentHandlers(false);
+				LOGGER.info("Millisecond, Tick, Delay");
 			} catch (SecurityException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

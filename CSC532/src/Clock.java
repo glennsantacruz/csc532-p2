@@ -3,8 +3,10 @@ class Clock implements Runnable {
 	protected int tick = 0;
 	protected int tickGranule = 1;
 	protected int msDelay = 10;
+	protected long startingms = 0;
 
 	public Clock(int tick, int msDelay) {
+		startingms = System.currentTimeMillis();
 		setTick(tick);
 		setDelayMillis(msDelay);
 	}
@@ -58,7 +60,7 @@ class Clock implements Runnable {
 			}
 			// we have slept long enough; add our tick
 			addTick(this.tickGranule);
-			CristianTimeSim.LOGGER.info("tick " + tick + ", ms " + msDelay);
+			CristianTimeSim.LOGGER.info((System.currentTimeMillis()-startingms) + ", " + tick + ", " + msDelay);
 		}
 	}
 }

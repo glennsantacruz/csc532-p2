@@ -2,12 +2,15 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.net.Socket;
 
+
 public class Client {
+	protected final int OBSERVE_DELAY = 10;
 	protected Clock clock = null;
 	protected Thread clockThread = null;
 	protected String serverLocation = null;
-	protected int lastServerTick = 0, lastClientTick = 0;
+	protected int lastServerTick = 0, lastClientTick = 0, lastNetDelay = 0;
 
+	
 	public Client(String serverLoc, int tick, int msDelay) {
 		this.clock = new Clock(tick, msDelay);
 		this.clockThread = new Thread(this.clock);
@@ -17,27 +20,28 @@ public class Client {
 
 	public void syncClock() {
 		// making use of our own clock, we will synchronize on the object
-		// and wait for it to notify us of each tick. Every 10th tick
+		// and wait for it to notify us of each tick. Every this.OBSERVE_DELAY tick
 		// (or greater, since we may lose granularity) of
 		// our clock, we will observe the server and make clock adjustment
 		boolean isRunning = true;
 		int currTick = 0, lastTick = 0;
 		while (isRunning) {
-			System.out.println( "client sync - yield"  );
+
 			// first we behave nice with others
 			Thread.yield();
 
 			// sync on the clock instance, so that we can wait for a tick
 			synchronized (this.clock) {
 				try {
-					System.out.println( "client sync waiting on clock"  );
+
 					this.clock.wait();
 					currTick = this.clock.getTick();
-					System.out.println( "client sync got tick " + currTick  );
+					System.out.println( "client sync tick " + currTick  );
 				} catch (InterruptedException ignored) {
 				}
 			}
-			if (currTick - lastTick >= 10) {
+			if (currTick - lastTick >= this.OBSERVE_DELAY) {
+				System.out.println( "client sync observing " + currTick  );
 				observeServer();
 				lastTick = currTick;
 			}
@@ -59,7 +63,7 @@ public class Client {
 			int srvTick = dis.readInt();
 			int tickEnd = this.clock.getTick();
 
-			System.out.println( "server response received"  );
+			System.out.println( "server response " + srvTick + ",tickBegin " + tickBegin + ",tickEnd " + tickEnd  );
 			// record observation and adjust as needed
 			observeAdjust(srvTick, tickBegin, tickEnd);
 		} catch (Throwable t) {
@@ -77,83 +81,136 @@ public class Client {
 		// approximate the time involved in a single leg of the message request
 		int netDelay = (tickEnd - tickBegin) / 2;
 
-		// the received server time should be adjusted according to the
-		// calculated netDelay; since the serverTick will represent time
-		// at the server prior to network transmission, we adjust the time
-		// by adding the netDelay:
-		srvTick += netDelay;
 
-		// calculate an approximation of the perceived server msDelay, by
-		// determining the server change interval, and our local change
-		// interval.
-		// the ratio of server to client can be applied to our local msDelay,
-		// thus approximating the server msDelay
-		int cliDelayMS = this.clock.getDelayMillis();
-		int srvDelayMS = ((srvTick - lastServerTick) / (tickEnd - lastClientTick)) * cliDelayMS;
+
+
+
+
+
+
+
+
+
+
+
+		
+		// note that the current netDelay is added to the current server tick, as a correction
+		// likewise, the prior netDelay is added to the prior server tick, as a correction
+				 
+		// calculate rate of change between server and client
+		System.out.println( "  client obs: srvTick/netDelay,lastSrvTick/lastNetdelay " + srvTick + "/" + netDelay + "," + lastServerTick + "/" + lastNetDelay );
+		double rate = (((double)srvTick + netDelay) - (lastServerTick + lastNetDelay)) / (tickEnd - lastClientTick);
 
 		// calculate a variance in ticks between server and client
 		int tickVariance = (srvTick - tickEnd);
 
-		// now we know an approximation of the server msDelay, which is a
-		// threshold
-		// to use in targeting our own msDelay adjustment; if we need to speed
-		// up,
-		// we should adjust to be faster than the server. Likewise, if we need
-		// to
-		// slow down, we should run slower than the server.
-		int targetMS = 0;
 
-		if (tickVariance > 1) {
-			// server is ahead; we need to speed up, by decreasing our msDelay
-			// to a value less than the perceived server msDelay.
 
-			// the adjustment is made by dividing the perceived server delay by
-			// the variance. Since the variance is a positive number, this has
-			// the
-			// effect of decreasing the perceived server delay, which we will
-			// then
-			// use as a reduction to the perceived delay, getting us our target:
-			targetMS = srvDelayMS - (srvDelayMS / tickVariance);
 
-		} else if (tickVariance < 1) {
-			// server is behind; we need to slow down, by increasing our msDelay
-			// to a value greater than the perceived server msDelay.
 
-			// the adjustment is made by dividing the absolute value of our
-			// variance
-			// (since the variance is negative) by the perceived server delay;
-			// similar to above, this will increase our delay beyond the server,
-			// allowing the server to approach our time (since it will then be
-			// running faster than us)
 
-			// note also that we are subtracting a negative, which is desired
-			targetMS = srvDelayMS - (tickVariance / srvDelayMS);
 
-		} else if (tickVariance == 1 || tickVariance == -1) {
-			// this is a special case, since we are either ahead or behind, but
-			// only
-			// slightly. we should adjust our targetMS to match the perceived
-			// server,
-			// with only a slight adjustment to the msDelay
 
-			// note that this should be rare case, but we handle nonetheless
-			targetMS = srvDelayMS + tickVariance;
 
-		} else {
-			// variance must be zero. clocks are currently in sync, but there's
-			// a chance of
-			// drift, so future adjustments could occur. no need to perform
-			// actions here
-			// other than logging to indicate we are in sync.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		// our current delay
+		int cliDelayMS = this.clock.getDelayMillis();
+
+		// calculate an adjustment factor (by default 1, no change):
+		double adj = 1;
+		
+		if( rate == 1 ) {
+			if( tickVariance > 0 ) {			
+				// server same rate, but ahead: slight speedup ( adj < 1 )
+				adj = 0.99 - (tickVariance/(2*this.OBSERVE_DELAY * cliDelayMS));
+			} else if( tickVariance < 0 ) {		
+
+
+
+
+
+				// server same rate, but behind: slight slowdown (adj > 1)
+				adj = 1.01 + (Math.abs(tickVariance)/(this.OBSERVE_DELAY * cliDelayMS));
+			} else {							
+				// server same rate, same tick: full convergence (best case)
+				System.out.println("client obs: converged!!");
+			}
+		} else if( rate > 1 ) {
+			if( tickVariance > 0 ) {			
+				// server faster, but ahead: large speedup ( adj << 1 )
+				adj = 1/rate;
+			} else if( tickVariance < 0 ) {		
+				// server faster, but behind: slight slowdown (adj > 1)
+				adj = 1.01 + (Math.abs(tickVariance)/(2*this.OBSERVE_DELAY * cliDelayMS));
+			} else {							
+				// server faster, same tick: slight speedup (adj < 1)
+				adj = 0.99 - (tickVariance/(2*this.OBSERVE_DELAY * cliDelayMS));
+			}			
+		} else if( rate < 1 ) {
+			if( tickVariance > 0 ) {			
+				// server slower, but ahead: slight speedup (adj < 1)
+				adj = 0.99 + (this.OBSERVE_DELAY/(rate * cliDelayMS));
+			} else if( tickVariance < 0 ) {		
+				// server slower, but behind: slight slowdown (adj > 1)
+				//adj = 1.01 + (double)Math.abs(tickVariance)/(.5*this.OBSERVE_DELAY * cliDelayMS);
+				adj = (double)1/Math.abs(rate);
+			} else {							
+				// server slower, but matched: no action. This situation will tend
+				// to resolve itself as part of the algorithm
+			}
 		}
+		// the adjusted target delay
+		int targetMS =  (int)(cliDelayMS * adj);
+		
+		double d = cliDelayMS * adj;
+		System.out.println( "adj: " + adj + ", cliDelayMs " + cliDelayMS + ", targetMS " + targetMS + ", d=" + d);
+		
 		// now we adjust our own clock's msDelay, according to the above
 		// observation:
-		System.out.println( "client obs: targetMS " + targetMS + ", srvTick " + srvTick + ", clientTick " + tickEnd  );
+		System.out.println( "1 client obs: adj      " + adj + ", rate " + rate );
+		System.out.println( "2 client obs: cliDelay " + cliDelayMS + ", variance " + tickVariance );
+		System.out.println( "3 client obs: targetMS " + targetMS + ", srvTick " + srvTick + ", clientTick " + tickEnd  );
 		this.clock.setDelayMillis(targetMS);
 
 		// store the last observed values, for use in the next observation
 		this.lastServerTick = srvTick;
 		this.lastClientTick = tickEnd;
 
+		this.lastNetDelay = netDelay;
 	}
 }

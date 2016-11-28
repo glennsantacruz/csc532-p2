@@ -14,6 +14,7 @@ class Clock implements Runnable {
 			this.tick += toAdj;
 			// now that we have ticked, notify any blocking
 			// threads so they can take action
+			//System.out.println("Clock.addTick " + this.tick);
 			notify();
 		}
 	}

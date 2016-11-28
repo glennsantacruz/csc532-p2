@@ -73,19 +73,14 @@ public class Server {
 
 		public void run() {
 			try {
-				System.out.println( "server reading client request"  );
-
 				String request = inStream.readUTF();
 				
-				System.out.println( "server read client request:" + request  );
-
 				if (Objects.equals(Server.REQUESTTICK, request)) {
 					// client is requesting our time; return it as quickly as
 					// possible
 					int tick = this.clock.getTick();
 					outStream.writeInt( tick );
 					System.out.println( "server sent client response: " + tick  );
-//					CristianTimeSim.LOGGER.info("tickreply " + tick );
 				}
 			} catch (Throwable ignored) {
 			}

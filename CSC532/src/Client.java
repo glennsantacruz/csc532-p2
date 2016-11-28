@@ -108,7 +108,8 @@ public class Client {
 		} else if( rate > 1 ) {
 			if( tickVariance > 0 ) {			
 				// server faster, but ahead: large speedup ( adj << 1 )
-				adj = 1/rate;
+				System.out.println("Yes it's hitting here");
+				adj = (1/rate) * 0.5;
 			} else if( tickVariance < 0 ) {		
 				// server faster, but behind: slight slowdown (adj > 1)
 				adj = 1.01 + (Math.abs(tickVariance)/(2*this.OBSERVE_DELAY * cliDelayMS));
